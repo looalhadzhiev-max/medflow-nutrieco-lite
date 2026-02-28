@@ -5,5 +5,5 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import { renderLayout } from './js/layout.js'
 import { supabase } from './js/supabaseClient.js'
 
-console.log('Supabase connected:', supabase)
-renderLayout()
+await renderLayout()
+window.dispatchEvent(new Event('layout:ready'))
