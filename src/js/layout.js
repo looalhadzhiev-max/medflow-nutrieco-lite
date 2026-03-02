@@ -1,8 +1,9 @@
 import { getSession, logout, onAuthStateChange } from './auth.js'
+import { getCurrentProfile, clearProfileCache } from '../lib/profile.js'
 
 /**
  * Layout Module – Vanilla JavaScript Multi-Page App
- * Renders Bootstrap 5 navbar, main container, and footer (session-aware)
+ * Renders Bootstrap 5 navbar, main container, and footer (session-aware + role-aware)
  */
 
 const pageTitle = {
@@ -36,8 +37,38 @@ function createNavItem(text, href) {
 }
 
 async function handleLogout() {
+  // prevent role cache artifacts
+  clearProfileCache()
   await logout()
   window.location.href = 'login.html'
+}
+
+/**
+ * Role-based UI applier
+ * - Adds Admin nav item only when role === 'admin'
+ * - Removes it otherwise
+ */
+function applyRoleNav(profile) {
+  const ul = document.querySelector('#nav-items')
+  if (!ul) return
+
+  let adminItem = document.querySelector('#admin-item')
+
+  if (profile?.role === 'admin') {
+    if (!adminItem) {
+      adminItem = createNavItem('Admin', 'admin.html')
+      adminItem.id = 'admin-item'
+
+      // place before Logout button if present
+      const logoutBtn = ul.querySelector('button')
+      const logoutLi = logoutBtn?.closest('li.nav-item')
+
+      if (logoutLi) ul.insertBefore(adminItem, logoutLi)
+      else ul.appendChild(adminItem)
+    }
+  } else {
+    if (adminItem) adminItem.remove()
+  }
 }
 
 function buildNav(session) {
@@ -68,7 +99,6 @@ function buildNav(session) {
   } else {
     ul.appendChild(createNavItem('Dashboard', 'dashboard.html'))
     ul.appendChild(createNavItem('Patients', 'patients.html'))
-    ul.appendChild(createNavItem('Admin', 'admin.html'))
 
     const logoutLi = document.createElement('li')
     logoutLi.className = 'nav-item'
@@ -83,6 +113,9 @@ function buildNav(session) {
 
   return nav
 }
+
+// Avoid registering duplicate listeners if renderLayout is called multiple times
+let roleListenerRegistered = false
 
 export async function renderLayout() {
   const app = document.querySelector('#app')
@@ -125,10 +158,24 @@ export async function renderLayout() {
   app.appendChild(main)
   app.appendChild(footer)
 
+  // Apply role-based nav immediately if cached profile exists (instant admin)
+  applyRoleNav(getCurrentProfile())
+
+  // Listen once for profile role updates
+  if (!roleListenerRegistered) {
+    roleListenerRegistered = true
+    window.addEventListener('profile:ready', (e) => {
+      applyRoleNav(e.detail)
+    })
+  }
+
   // Re-render navbar on auth changes
   onAuthStateChange((newSession) => {
     const existing = document.querySelector('nav.navbar')
     const updated = buildNav(newSession)
     if (existing?.parentNode) existing.parentNode.replaceChild(updated, existing)
+
+    // After re-render, apply role visibility again (if profile is known)
+    applyRoleNav(getCurrentProfile())
   })
 }

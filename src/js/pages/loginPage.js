@@ -72,7 +72,3 @@ export function initLoginPage() {
   });
 }
 
-// auto-run when module is included in a page
-window.addEventListener('layout:ready', () => {
-  initLoginPage()
-}, { once: true })
