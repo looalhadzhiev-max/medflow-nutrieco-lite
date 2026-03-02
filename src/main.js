@@ -74,3 +74,8 @@ if (page === 'register.html') {
   const mod = await import('./js/pages/registerPage.js')
   mod.initRegisterPage?.()
 }
+
+if (page === 'admin.html') {
+  const mod = await import('./js/pages/adminPage.js')
+  mod.initAdminPage?.()
+}
