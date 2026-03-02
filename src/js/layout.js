@@ -1,4 +1,4 @@
-import { getSession, logout, onAuthStateChange } from './auth.js'
+import { getSession, logout } from './auth.js'
 import { getCurrentProfile, clearProfileCache } from '../lib/profile.js'
 
 /**
@@ -36,13 +36,6 @@ function createNavItem(text, href) {
   return li
 }
 
-async function handleLogout() {
-  // prevent role cache artifacts
-  clearProfileCache()
-  await logout()
-  window.location.href = 'login.html'
-}
-
 /**
  * Role-based UI applier
  * - Adds Admin nav item only when role === 'admin'
@@ -59,7 +52,6 @@ function applyRoleNav(profile) {
       adminItem = createNavItem('Admin', 'admin.html')
       adminItem.id = 'admin-item'
 
-      // place before Logout button if present
       const logoutBtn = ul.querySelector('button')
       const logoutLi = logoutBtn?.closest('li.nav-item')
 
@@ -90,7 +82,6 @@ function buildNav(session) {
 
   const ul = nav.querySelector('#nav-items')
 
-  // Always show Home
   ul.appendChild(createNavItem('Home', 'index.html'))
 
   if (!session) {
@@ -100,13 +91,44 @@ function buildNav(session) {
     ul.appendChild(createNavItem('Dashboard', 'dashboard.html'))
     ul.appendChild(createNavItem('Patients', 'patients.html'))
 
+    // Render Admin immediately if cached profile says admin (prevents flicker)
+    const profile = getCurrentProfile()
+    if (profile?.role === 'admin') {
+      const adminItem = createNavItem('Admin', 'admin.html')
+      adminItem.id = 'admin-item'
+      ul.appendChild(adminItem)
+    }
+
     const logoutLi = document.createElement('li')
     logoutLi.className = 'nav-item'
+
     const btn = document.createElement('button')
     btn.className = 'btn btn-outline-light ms-2'
     btn.type = 'button'
     btn.textContent = 'Logout'
-    btn.addEventListener('click', handleLogout)
+
+    btn.addEventListener('click', async () => {
+      // 1) instant UI feedback
+      btn.disabled = true
+      btn.textContent = 'Logging out...'
+      clearProfileCache()
+
+      // Optional: immediately swap navbar to guest to feel instant
+      const existing = document.querySelector('nav.navbar')
+      const updated = buildNav(null)
+      if (existing?.parentNode) existing.parentNode.replaceChild(updated, existing)
+
+      // 2) real logout (must finish BEFORE redirect)
+      try {
+        await logout()
+      } catch (e) {
+        console.warn('Logout failed:', e)
+      }
+
+      // 3) redirect
+      window.location.href = 'login.html'
+    })
+
     logoutLi.appendChild(btn)
     ul.appendChild(logoutLi)
   }
@@ -127,14 +149,12 @@ export async function renderLayout() {
   const currentTitle = getCurrentPageTitle()
   const year = new Date().getFullYear()
 
-  // Base wrapper
   app.innerHTML = ''
   app.style.display = 'flex'
   app.style.flexDirection = 'column'
   app.style.minHeight = '100vh'
 
   const session = await getSession()
-
   const nav = buildNav(session)
 
   const main = document.createElement('main')
@@ -158,24 +178,9 @@ export async function renderLayout() {
   app.appendChild(main)
   app.appendChild(footer)
 
-  // Apply role-based nav immediately if cached profile exists (instant admin)
-  applyRoleNav(getCurrentProfile())
-
-  // Listen once for profile role updates
-  if (!roleListenerRegistered) {
-    roleListenerRegistered = true
-    window.addEventListener('profile:ready', (e) => {
-      applyRoleNav(e.detail)
-    })
+  // Load profile and apply role-based UI
+  if (session) {
+    const profile = await getCurrentProfile()
+    applyRoleNav(profile)
   }
-
-  // Re-render navbar on auth changes
-  onAuthStateChange((newSession) => {
-    const existing = document.querySelector('nav.navbar')
-    const updated = buildNav(newSession)
-    if (existing?.parentNode) existing.parentNode.replaceChild(updated, existing)
-
-    // After re-render, apply role visibility again (if profile is known)
-    applyRoleNav(getCurrentProfile())
-  })
 }

@@ -14,12 +14,46 @@ import { hydrateProfileFromStorage } from './lib/profile.js'
 
 import { redirectIfAuthed } from './js/guestOnly.js'
 import { requireAuth } from './js/guards.js'
+import { requireAdmin } from './js/adminGuard.js'
+
+// ----------------------------
+// Determine current page
+// ----------------------------
+const page = window.location.pathname.split('/').pop() || 'index.html'
+
+// ----------------------------
+// Guards FIRST (redirect before rendering anything)
+// ----------------------------
+
+// Guest-only pages
+if (page === 'login.html' || page === 'register.html') {
+  await redirectIfAuthed()
+}
+
+// Protected pages
+if (page === 'dashboard.html' || page === 'patients.html' || page === 'patient-details.html' || page === 'admin.html') {
+  const ok = await requireAuth()
+  if (ok === false) {
+    // requireAuth should redirect to login
+    // stop execution so we don't render/layout-init
+    throw new Error('Redirecting to login...')
+  }
+}
+
+// Admin page
+if (page === 'admin.html') {
+  const ok = await requireAdmin()
+  if (ok === false) {
+    // requireAdmin should redirect away
+    throw new Error('Redirecting: not an admin...')
+  }
+}
 
 // ----------------------------
 // Bootstrap order (NO flicker)
 // 1) hydrate profile from storage (emit:false) BEFORE layout render
-// 2) render layout (navbar reads cached role instantly)
-// 3) auth bootstrap (fetches true profile + emits profile:ready)
+// 2) render layout
+// 3) auth bootstrap (fetch profile + emits profile:ready)
 // ----------------------------
 await hydrateProfileFromStorage({ emit: false })
 
@@ -29,26 +63,7 @@ window.dispatchEvent(new Event('layout:ready'))
 await initAuthBootstrap()
 
 // ----------------------------
-// Simple Page Router
-// ----------------------------
-const page = window.location.pathname.split('/').pop() || 'index.html'
-
-// ----------------------------
-// Guards
-// ----------------------------
-
-// Guest-only pages
-if (page === 'login.html' || page === 'register.html') {
-  await redirectIfAuthed()
-}
-
-// Protected pages (добавяй/махай според реалните ти страници)
-if (page === 'dashboard.html' || page === 'patients.html' || page === 'patient-details.html' || page === 'admin.html') {
-  await requireAuth()
-}
-
-// ----------------------------
-// Page Initializers (само тези, които реално съществуват)
+// Page Initializers (only existing)
 // ----------------------------
 if (page === 'login.html') {
   const mod = await import('./js/pages/loginPage.js')
@@ -59,5 +74,3 @@ if (page === 'register.html') {
   const mod = await import('./js/pages/registerPage.js')
   mod.initRegisterPage?.()
 }
-
-// Ако после създадеш patientsPage.js/adminPage.js и т.н. — добавяме ги тук.

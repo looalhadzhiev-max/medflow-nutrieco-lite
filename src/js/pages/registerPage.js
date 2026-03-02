@@ -1,4 +1,4 @@
-import { register, logout } from '../auth.js'
+import { register } from '../auth.js'
 
 export function initRegisterPage() {
   const content = document.getElementById('content')
@@ -23,6 +23,10 @@ export function initRegisterPage() {
             </div>
             <button type="submit" class="btn btn-primary w-100">Create account</button>
           </form>
+
+          <div class="text-center mt-3">
+            <a href="login.html" class="text-decoration-none">Already have an account? Login</a>
+          </div>
         </div>
       </div>
     </div>
@@ -37,6 +41,7 @@ export function initRegisterPage() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
+
     errorBox.classList.add('d-none')
     successBox.classList.add('d-none')
     submitBtn.disabled = true
@@ -54,18 +59,21 @@ export function initRegisterPage() {
       return
     }
 
-    // If Supabase created a session automatically, clear it so user can login explicitly
-    if (data?.session) {
-      await logout()
-    }
+    // Supabase behavior:
+    // - if email confirmation is ON => data.session is usually null
+    // - if email confirmation is OFF => data.session may exist
+    const needsConfirmation = !data?.session
 
-    successBox.textContent = 'Account created. You can login now.'
+    successBox.innerHTML = needsConfirmation
+      ? `✅ Account created. Please check your email to confirm your account, then login.`
+      : `✅ Account created. You can login now.`
+
     successBox.classList.remove('d-none')
 
-    setTimeout(() => {
-      window.location.href = 'login.html'
-    }, 1200)
+    // Provide an explicit CTA button
+    const cta = document.createElement('div')
+    cta.className = 'mt-3 d-grid'
+    cta.innerHTML = `<a class="btn btn-outline-primary" href="login.html">Go to Login</a>`
+    form.insertAdjacentElement('afterend', cta)
   })
 }
-
-window.addEventListener('layout:ready', initRegisterPage, { once: true })
