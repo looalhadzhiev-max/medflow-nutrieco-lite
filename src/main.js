@@ -79,3 +79,8 @@ if (page === 'admin.html') {
   const mod = await import('./js/pages/adminPage.js')
   mod.initAdminPage?.()
 }
+
+if (page === 'patients.html') {
+  const mod = await import('./js/pages/patientsPage.js')
+  await mod.initPatientsPage?.()
+}

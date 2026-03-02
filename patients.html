@@ -9,12 +9,5 @@
     <div id="app"></div>
 
     <script type="module" src="/src/main.js"></script>
-
-    <script type="module">
-      import { requireAuth } from "/src/js/guards.js";
-      requireAuth();
-      const content = document.getElementById("content");
-      if (content) content.innerHTML = `<p class="text-muted">Patients placeholder (logged-in only).</p>`;
-    </script>
   </body>
 </html>
