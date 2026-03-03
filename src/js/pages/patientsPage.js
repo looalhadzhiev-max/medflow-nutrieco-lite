@@ -318,10 +318,15 @@ export async function initPatientsPage() {
 
       tbody.innerHTML = ''
       for (const p of list) {
+        const detailsHref = `/patient-details.html?id=${encodeURIComponent(p.id)}`
+
         const tr = el(`
           <tr data-id="${p.id}" data-owner="${p.owner_id}">
             <td>
-              <div class="fw-semibold">${p.full_name}</div>
+              <!-- ✅ LINK към Patient Details -->
+              <a href="${detailsHref}" class="fw-semibold text-decoration-none">
+                ${p.full_name}
+              </a>
               ${p.notes ? `<div class="text-muted small">${p.notes}</div>` : ''}
             </td>
 
@@ -330,11 +335,15 @@ export async function initPatientsPage() {
             <td class="text-muted small">${fmt(p.created_at)}</td>
 
             <td class="text-end">
+              <!-- ✅ optional: View button (по-лесно за потребителя) -->
+              <a class="btn btn-outline-primary btn-sm me-2" href="${detailsHref}">View</a>
+
               ${isAdmin ? `<button class="btn btn-outline-secondary btn-sm me-2" data-action="reassign">Reassign</button>` : ''}
               <button class="btn btn-outline-danger btn-sm" data-action="delete">Delete</button>
             </td>
           </tr>
         `)
+
         tbody.appendChild(tr)
       }
     } catch (e) {

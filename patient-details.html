@@ -4,27 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Patient Details</title>
+    <link rel="stylesheet" href="/src/css/app.css" />
   </head>
 
   <body>
-    <div style="max-width: 960px; margin: 24px auto; padding: 0 16px;">
-      <a href="/patients.html">← Back to Patients</a>
+    <div class="container">
+      <div class="topbar">
+        <a href="/patients.html">← Back to Patients</a>
+        <span id="statusBadge" class="badge">Loading…</span>
+      </div>
 
-      <h1 style="margin-top: 12px;">Patient</h1>
+      <h1 id="title">Patient</h1>
+      <div id="state" class="state">Loading…</div>
 
-      <div id="state">Loading...</div>
+      <div class="grid">
+        <section class="card">
+          <h2>Details</h2>
+          <div class="kv">
+            <div class="k">Full name</div><div id="dName" class="v">—</div>
+            <div class="k">Email</div><div id="dEmail" class="v">—</div>
+            <div class="k">Phone</div><div id="dPhone" class="v">—</div>
+            <div class="k">Notes</div><div id="dNotes" class="v">—</div>
+            <div class="k">Created</div><div id="dCreated" class="v">—</div>
+          </div>
+        </section>
 
-      <section style="margin-top: 14px;">
-        <h2 style="margin: 0 0 8px 0;">Details</h2>
-        <pre id="debug" style="white-space: pre-wrap; background: #f6f6f6; padding: 12px; border-radius: 8px;"></pre>
-      </section>
+        <aside class="card">
+          <h2>Latest + Indices</h2>
+          <div class="kv">
+            <div class="k">Latest date</div><div id="iDate" class="v">—</div>
+            <div class="k">Weight</div><div id="iWeight" class="v">—</div>
+            <div class="k">Height</div><div id="iHeight" class="v">—</div>
+            <div class="k">Waist</div><div id="iWaist" class="v">—</div>
+          </div>
 
-      <hr style="margin: 20px 0;" />
+          <hr />
 
-      <section>
-        <h2 style="margin: 0 0 8px 0;">Measurements</h2>
+          <div class="kv">
+            <div class="k">BMI</div><div id="iBmi" class="v">—</div>
+            <div class="k">BMI category</div><div id="iBmiCat" class="v">—</div>
+            <div class="k">WHtR</div><div id="iWhtr" class="v">—</div>
+          </div>
+        </aside>
+      </div>
 
-        <form id="mForm" style="display:grid; gap:10px; max-width:420px;">
+      <hr />
+
+      <section class="card">
+        <h2>Measurements</h2>
+
+        <form id="mForm" style="max-width: 520px;">
           <label>
             Date/time
             <input id="mTakenAt" type="datetime-local" />
@@ -53,9 +82,20 @@
           <button type="submit">Add measurement</button>
         </form>
 
-        <div id="mMsg" style="margin-top:10px;"></div>
+        <div id="mMsg" class="msg"></div>
 
-        <ul id="mList" style="margin-top:16px; padding-left:18px;"></ul>
+        <table class="table" aria-label="Measurements table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Weight (kg)</th>
+              <th>Height (cm)</th>
+              <th>Waist (cm)</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="mTbody"></tbody>
+        </table>
       </section>
     </div>
 
