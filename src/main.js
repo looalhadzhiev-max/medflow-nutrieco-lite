@@ -22,6 +22,39 @@ import { requireAdmin } from './js/adminGuard.js'
 const page = window.location.pathname.split('/').pop() || 'index.html'
 
 // ----------------------------
+// Helpers
+// ----------------------------
+function setFallback(message) {
+  const content = document.getElementById('content')
+  if (!content) return
+  content.innerHTML = `
+    <div class="py-5">
+      <div class="alert alert-warning shadow-sm">
+        <div class="fw-bold mb-1">Page did not initialize</div>
+        <div>${message}</div>
+        <div class="mt-2 small text-muted">Current page: <code>${page}</code></div>
+      </div>
+    </div>
+  `
+}
+
+async function safePageInit(label, importer, initName) {
+  try {
+    const mod = await importer()
+    const fn = mod?.[initName]
+    if (typeof fn !== 'function') {
+      console.warn(`[INIT] ${label}: missing export ${initName}()`)
+      setFallback(`Missing initializer <code>${initName}()</code> in <code>${label}</code>.`)
+      return
+    }
+    await fn()
+  } catch (e) {
+    console.error(`[INIT] ${label} failed:`, e)
+    setFallback(`Initializer crashed for <code>${label}</code>. Check Console.`)
+  }
+}
+
+// ----------------------------
 // Guards FIRST (redirect before rendering anything)
 // ----------------------------
 
@@ -31,11 +64,14 @@ if (page === 'login.html' || page === 'register.html') {
 }
 
 // Protected pages
-if (page === 'dashboard.html' || page === 'patients.html' || page === 'patient-details.html' || page === 'admin.html') {
+if (
+  page === 'dashboard.html' ||
+  page === 'patients.html' ||
+  page === 'patient-details.html' ||
+  page === 'admin.html'
+) {
   const ok = await requireAuth()
   if (ok === false) {
-    // requireAuth should redirect to login
-    // stop execution so we don't render/layout-init
     throw new Error('Redirecting to login...')
   }
 }
@@ -44,16 +80,12 @@ if (page === 'dashboard.html' || page === 'patients.html' || page === 'patient-d
 if (page === 'admin.html') {
   const ok = await requireAdmin()
   if (ok === false) {
-    // requireAdmin should redirect away
     throw new Error('Redirecting: not an admin...')
   }
 }
 
 // ----------------------------
 // Bootstrap order (NO flicker)
-// 1) hydrate profile from storage (emit:false) BEFORE layout render
-// 2) render layout
-// 3) auth bootstrap (fetch profile + emits profile:ready)
 // ----------------------------
 await hydrateProfileFromStorage({ emit: false })
 
@@ -63,34 +95,36 @@ window.dispatchEvent(new Event('layout:ready'))
 await initAuthBootstrap()
 
 // ----------------------------
-// Page Initializers (only existing)
+// Page Initializers
 // ----------------------------
 if (page === 'login.html') {
-  const mod = await import('./js/pages/loginPage.js')
-  mod.initLoginPage?.()
+  await safePageInit('loginPage.js', () => import('./js/pages/loginPage.js'), 'initLoginPage')
 }
 
 if (page === 'register.html') {
-  const mod = await import('./js/pages/registerPage.js')
-  mod.initRegisterPage?.()
+  await safePageInit('registerPage.js', () => import('./js/pages/registerPage.js'), 'initRegisterPage')
 }
 
 if (page === 'admin.html') {
-  const mod = await import('./js/pages/adminPage.js')
-  mod.initAdminPage?.()
+  await safePageInit('adminPage.js', () => import('./js/pages/adminPage.js'), 'initAdminPage')
 }
 
 if (page === 'patients.html') {
-  const mod = await import('./js/pages/patientsPage.js')
-  await mod.initPatientsPage?.()
+  await safePageInit('patientsPage.js', () => import('./js/pages/patientsPage.js'), 'initPatientsPage')
 }
 
 if (page === 'dashboard.html') {
-  const mod = await import('./js/pages/dashboardPage.js')
-  await mod.initDashboardPage?.()
+  await safePageInit('dashboardPage.js', () => import('./js/pages/dashboardPage.js'), 'initDashboardPage')
+}
+
+if (page === 'patient-details.html') {
+  await safePageInit(
+    'patientDetailsPage.js',
+    () => import('./js/pages/patient-details.js'),
+    'initPatientDetailsPage'
+  )
 }
 
 if (page === 'index.html') {
-  const mod = await import('./js/pages/homePage.js')
-  await mod.initHomePage?.()
+  await safePageInit('homePage.js', () => import('./js/pages/homePage.js'), 'initHomePage')
 }
