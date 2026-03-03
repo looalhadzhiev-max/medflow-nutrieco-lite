@@ -161,7 +161,6 @@ export async function renderLayout() {
   main.className = 'flex-grow-1'
   main.innerHTML = `
     <div class="container-fluid py-4">
-      <h1 class="mb-4">${currentTitle}</h1>
       <div id="content"></div>
     </div>
   `

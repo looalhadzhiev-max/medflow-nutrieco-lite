@@ -84,3 +84,13 @@ if (page === 'patients.html') {
   const mod = await import('./js/pages/patientsPage.js')
   await mod.initPatientsPage?.()
 }
+
+if (page === 'dashboard.html') {
+  const mod = await import('./js/pages/dashboardPage.js')
+  await mod.initDashboardPage?.()
+}
+
+if (page === 'index.html') {
+  const mod = await import('./js/pages/homePage.js')
+  await mod.initHomePage?.()
+}
