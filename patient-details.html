@@ -5,13 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Patient Details</title>
   </head>
+
   <body>
     <div style="max-width: 960px; margin: 24px auto; padding: 0 16px;">
       <a href="/patients.html">← Back to Patients</a>
-      <h1>Patient</h1>
+
+      <h1 style="margin-top: 12px;">Patient</h1>
 
       <div id="state">Loading...</div>
-      <pre id="debug" style="white-space: pre-wrap;"></pre>
+
+      <section style="margin-top: 14px;">
+        <h2 style="margin: 0 0 8px 0;">Details</h2>
+        <pre id="debug" style="white-space: pre-wrap; background: #f6f6f6; padding: 12px; border-radius: 8px;"></pre>
+      </section>
+
+      <hr style="margin: 20px 0;" />
+
+      <section>
+        <h2 style="margin: 0 0 8px 0;">Measurements</h2>
+
+        <form id="mForm" style="display:grid; gap:10px; max-width:420px;">
+          <label>
+            Date/time
+            <input id="mTakenAt" type="datetime-local" />
+          </label>
+
+          <label>
+            Weight (kg)
+            <input id="mWeight" type="number" step="0.1" min="0" />
+          </label>
+
+          <label>
+            Height (cm)
+            <input id="mHeight" type="number" step="0.1" min="0" />
+          </label>
+
+          <label>
+            Waist (cm)
+            <input id="mWaist" type="number" step="0.1" min="0" />
+          </label>
+
+          <label>
+            Notes
+            <textarea id="mNotes" rows="3"></textarea>
+          </label>
+
+          <button type="submit">Add measurement</button>
+        </form>
+
+        <div id="mMsg" style="margin-top:10px;"></div>
+
+        <ul id="mList" style="margin-top:16px; padding-left:18px;"></ul>
+      </section>
     </div>
 
     <script type="module" src="/src/js/pages/patient-details.js"></script>
