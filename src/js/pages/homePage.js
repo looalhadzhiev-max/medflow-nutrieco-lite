@@ -232,7 +232,7 @@ export async function initHomePage() {
         <div class="hero-inner">
           <div>
             <div class="d-flex align-items-center gap-2 mb-3">
-                <img src="/src/assets/brand-logo.svg" alt="MedFlow" style="height:42px; width:auto;" />
+                <img src="/src/brand-logo.svg" alt="MedFlow" style="height:42px; width:auto;" />
             </div>
             <div class="hero-title">Nutrition workflow,<br/> simplified.</div>
             <div class="hero-sub">
