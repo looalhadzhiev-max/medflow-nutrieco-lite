@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="96" viewBox="0 0 420 96" role="img" aria-label="MedFlow NutriEco Lite">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Mark -->
+  <g transform="translate(8,8)" filter="url(#s)">
+    <rect x="0" y="0" width="80" height="80" rx="18" fill="url(#g)"/>
+    <!-- inner white panel -->
+    <rect x="12" y="12" width="56" height="56" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <!-- pulse line -->
+    <path d="M18 46h10l6-14 10 28 8-18h18"
+          fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- tiny cross -->
+    <path d="M56 26v10M51 31h10" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(104,18)">
+    <text x="0" y="28" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="30" font-weight="900" fill="#0f172a">
+      MedFlow
+    </text>
+    <text x="0" y="56" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="16" font-weight="700" fill="#475569">
+      NutriEco <tspan font-weight="800" fill="#2563eb">Lite</tspan>
+    </text>
+  </g>
+</svg>

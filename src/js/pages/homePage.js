@@ -231,11 +231,9 @@ export async function initHomePage() {
       <div class="hero-wrap">
         <div class="hero-inner">
           <div>
-            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-              <div class="brand-pill"><i class="bi bi-heart-pulse"></i> MedFlow NutriEco Lite</div>
-              ${statusPill}
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <img src="/src/assets/brand-logo.svg" alt="MedFlow" style="height:42px; width:auto;" />
             </div>
-
             <div class="hero-title">Nutrition workflow,<br/> simplified.</div>
             <div class="hero-sub">
               Patient management, measurements, indices (BMI/WHtR) and secure lab document storage —
