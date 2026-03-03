@@ -30,7 +30,7 @@ async function getUserId() {
 async function fetchPatients() {
   const { data, error } = await supabase
     .from('patients')
-    .select('id, owner_id, full_name, notes, created_at')
+    .select('id, owner_id, full_name, email, phone, notes, created_at')
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -49,8 +49,16 @@ async function fetchUsersForAdmin() {
   return data ?? []
 }
 
-async function createPatient({ owner_id, full_name, notes }) {
-  const { error } = await supabase.from('patients').insert([{ owner_id, full_name, notes }])
+async function createPatient({ owner_id, full_name, email, phone, notes }) {
+  const { error } = await supabase.from('patients').insert([
+    {
+      owner_id,
+      full_name,
+      email: email || null,
+      phone: phone || null,
+      notes,
+    },
+  ])
   if (error) throw error
 }
 
@@ -60,11 +68,7 @@ async function deletePatient(id) {
 }
 
 async function reassignPatientOwner(patientId, newOwnerId) {
-  const { error } = await supabase
-    .from('patients')
-    .update({ owner_id: newOwnerId })
-    .eq('id', patientId)
-
+  const { error } = await supabase.from('patients').update({ owner_id: newOwnerId }).eq('id', patientId)
   if (error) throw error
 }
 
@@ -107,6 +111,16 @@ export async function initPatientsPage() {
                 <div class="mb-3">
                   <label class="form-label" for="full_name">Full name</label>
                   <input class="form-control" id="full_name" required />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="email">Email</label>
+                  <input class="form-control" id="email" type="email" />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="phone">Phone</label>
+                  <input class="form-control" id="phone" type="text" />
                 </div>
 
                 <div class="mb-3">
@@ -186,6 +200,8 @@ export async function initPatientsPage() {
   const alertBox = wrap.querySelector('#patients-alert')
   const form = wrap.querySelector('#patient-form')
   const fullNameInput = wrap.querySelector('#full_name')
+  const emailInput = wrap.querySelector('#email')
+  const phoneInput = wrap.querySelector('#phone')
   const notesInput = wrap.querySelector('#notes')
   const refreshBtn = wrap.querySelector('#patients-refresh')
   const tbody = wrap.querySelector('#patients-tbody')
@@ -282,15 +298,11 @@ export async function initPatientsPage() {
     reassignConfirmBtn.textContent = 'Saving...'
 
     try {
-      // timeout so UI never hangs forever
       const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout. Check RLS / network.')), 8000)
       )
 
-      await Promise.race([
-        reassignPatientOwner(targetPatientId, newOwnerId),
-        timeout,
-      ])
+      await Promise.race([reassignPatientOwner(targetPatientId, newOwnerId), timeout])
 
       reassignModal.hide()
       targetPatientId = null
@@ -323,10 +335,12 @@ export async function initPatientsPage() {
         const tr = el(`
           <tr data-id="${p.id}" data-owner="${p.owner_id}">
             <td>
-              <!-- ✅ LINK към Patient Details -->
               <a href="${detailsHref}" class="fw-semibold text-decoration-none">
                 ${p.full_name}
               </a>
+
+              ${p.email ? `<div class="text-muted small">${p.email}</div>` : ''}
+              ${p.phone ? `<div class="text-muted small">${p.phone}</div>` : ''}
               ${p.notes ? `<div class="text-muted small">${p.notes}</div>` : ''}
             </td>
 
@@ -335,7 +349,6 @@ export async function initPatientsPage() {
             <td class="text-muted small">${fmt(p.created_at)}</td>
 
             <td class="text-end">
-              <!-- ✅ optional: View button (по-лесно за потребителя) -->
               <a class="btn btn-outline-primary btn-sm me-2" href="${detailsHref}">View</a>
 
               ${isAdmin ? `<button class="btn btn-outline-secondary btn-sm me-2" data-action="reassign">Reassign</button>` : ''}
@@ -358,6 +371,8 @@ export async function initPatientsPage() {
     clearError()
 
     const full_name = fullNameInput.value.trim()
+    const email = emailInput?.value.trim() || null
+    const phone = phoneInput?.value.trim() || null
     const notes = notesInput.value.trim()
 
     if (!full_name) {
@@ -375,9 +390,17 @@ export async function initPatientsPage() {
 
       if (!owner_id) throw new Error('Not authenticated.')
 
-      await createPatient({ owner_id, full_name, notes: notes || null })
+      await createPatient({
+        owner_id,
+        full_name,
+        email,
+        phone,
+        notes: notes || null,
+      })
 
       fullNameInput.value = ''
+      if (emailInput) emailInput.value = ''
+      if (phoneInput) phoneInput.value = ''
       notesInput.value = ''
       await render()
     } catch (e2) {
