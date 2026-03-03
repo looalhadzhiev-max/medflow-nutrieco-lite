@@ -67,19 +67,26 @@ export async function loadProfile() {
       return null
     }
 
+    // ✅ maybeSingle: ако по някаква причина няма ред, не гърми .single()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Profiles select error:', error)
       throw error
     }
 
-    cachedProfile = data
-    sessionStorage.setItem(keyForUser(user.id), JSON.stringify(cachedProfile))
+    cachedProfile = data ?? null
+
+    if (cachedProfile) {
+      sessionStorage.setItem(keyForUser(user.id), JSON.stringify(cachedProfile))
+    } else {
+      // няма ред -> чистим ключа за този user
+      sessionStorage.removeItem(keyForUser(user.id))
+    }
 
     window.dispatchEvent(new CustomEvent('profile:ready', { detail: cachedProfile }))
     return cachedProfile
@@ -97,6 +104,33 @@ export function clearProfileCache() {
   window.dispatchEvent(new CustomEvent('profile:ready', { detail: null }))
 }
 
-export function getCurrentProfile() {
+/**
+ * ✅ Ensures cachedProfile is available:
+ * - if already loaded -> returns it
+ * - else tries storage hydrate
+ * - else loads from DB
+ */
+export async function ensureCurrentProfile() {
+  if (cachedProfile) return cachedProfile
+
+  // 1) try storage (без emit за да няма излишни UI "мигания")
+  await hydrateProfileFromStorage({ emit: false })
+  if (cachedProfile) return cachedProfile
+
+  // 2) fetch from DB
+  return await loadProfile()
+}
+
+/**
+ * Backward-compatible getter.
+ * Usage:
+ *  - getCurrentProfile() -> sync, returns cachedProfile (may be null)
+ *  - await getCurrentProfile({ ensure: true }) -> async, guarantees load attempt
+ */
+export function getCurrentProfile(options) {
+  if (options?.ensure) {
+    // allow: await getCurrentProfile({ ensure: true })
+    return ensureCurrentProfile()
+  }
   return cachedProfile
 }
